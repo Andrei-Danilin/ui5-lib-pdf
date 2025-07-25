@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library xmlns="http://www.sap.com/sap.ui.library.xsd" >
+
+  <name>custom.pdf</name>
+  <vendor>Andrei Danilin</vendor>
+  <copyright>Andrei Danilin, Andrei Danilin</copyright>
+  <version>1.0.0</version>
+
+  <documentation>Controls for work with PDF</documentation>
+
+  <dependencies>
+	<dependency>
+	  <libraryName>sap.ui.core</libraryName>
+	</dependency>
+	<dependency>
+	  <libraryName>sap.m</libraryName>
+	</dependency>
+  </dependencies>
+
+  <appData>
+  </appData>
+</library>

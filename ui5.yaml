@@ -1,0 +1,26 @@
+specVersion: '2.5'
+type: library
+metadata:
+  name: custom.pdf
+server:
+  customMiddleware:
+  - name: fiori-tools-proxy
+    afterMiddleware: compression
+    configuration:
+      ignoreCertError: true
+      connection:
+          useStrictSSL: false
+      backend:
+      - path: /sap
+        url: http://server:8001/
+        scp: false
+      ui5:
+        path: 
+        - /resources
+        - /test-resources
+        url: https://ui5.sap.com
+  - name: fiori-tools-appreload
+    afterMiddleware: compression
+    configuration:
+     port: 35729
+     path: webapp

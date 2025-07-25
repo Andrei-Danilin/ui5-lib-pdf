@@ -1,0 +1,56 @@
+{
+	"_version": "1.12.0",
+	"sap.app": {
+		"id": "custom.pdf",
+		"type": "library",
+		"embeds": [],
+		"applicationVersion": {
+			"version": "1.0.0"
+		},
+		"title": "Custom controls for integrate google map",
+		"description": "Tooling for work with google maps api",
+		"resources": "resources.json",
+		"ach": "",
+		"offline": true
+	},
+	"sap.ui": {
+		"technology": "UI5",
+		"deviceTypes": {
+			"desktop": true,
+			"tablet": true,
+			"phone": true
+		},
+		"supportedThemes": ["sap_hcb", "sap_belize", "sap_belize_plus"]
+	},
+	"sap.ui5": {
+		"resources": {
+			"js": [],
+			"css": []
+		},
+		"dependencies": {
+			"minUI5Version": "1.52.0",
+			"libs": {
+				"sap.ui.core": {}
+			}
+		},
+		"library": {
+			"i18n": "messagebundle.properties",
+			"css": false,
+			"content": {
+				"controls": [
+					"custom.pdf.PDFViewer"
+				],
+				"elements": [],
+				"types": [],
+				"interfaces": []
+			}
+		}
+	},
+	"sap.platform.hcp": {
+		"uri": ""
+	},
+	"sap.fiori": {
+		"registrationIds": [],
+		"archeType": "reusecomponent"
+	}
+}

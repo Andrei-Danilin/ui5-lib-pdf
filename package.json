@@ -1,0 +1,27 @@
+{
+  "name": "custom.pdf",
+  "version": "1.0.0",
+  "author": "Andrei Danilin",
+  "scripts": {
+        "start": "fiori run index.html",
+        "build": "rimraf dist && ui5 build -a --include-task=generateManifestBundle generateCachebusterInfo",
+        "deploy": "npm run build && fiori deploy --config ui5-deploy.yaml && rimraf archive.zip",
+        "undeploy": "fiori undeploy --config ui5-deploy.yaml",
+        "deploy-test": "npm run build && fiori deploy --config ui5-deploy.yaml --testMode true"
+  },
+  "devDependencies": {
+        "@ui5/cli": "^2.14.20",
+        "@sap/ux-ui5-tooling": "1.14.0",
+        "eslint": "^8.56.0",
+        "@babel/eslint-parser": "7.24.7",
+        "@sap-ux/ui5-middleware-fe-mockserver": "^2.2.41",
+        "rimraf": "^5.0.7",
+        "@sap-ux/eslint-plugin-fiori-tools": "^0.4.2",
+        "ui5-task-flatten-library": "3.0.2"
+  },
+  "ui5": {
+        "dependencies": [
+            "@sap/ux-ui5-tooling"
+        ]
+    }
+}
