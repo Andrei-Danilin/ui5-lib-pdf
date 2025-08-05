@@ -167,14 +167,25 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/m/MessageToast',
       this.setNewZoom(oEvent.getParameter("value"));
     },
 
-    setNewZoom: function(newZoom, preventRender) {
+    setNewZoom: function(newZoom, preventRender, initZoom, x, y) {
       if (this._viewerModel.getProperty("/pdfDoc") === null) return;
       if(newZoom > 5) {
         newZoom = 5;
       }
       this._viewerModel.setProperty("/zoom", newZoom.toFixed(1));
       if(!preventRender) {
-      	this.renderPage();
+        this.renderPage().then((renderTask)=> {
+          renderTask.promise.then(()=>{
+            if(initZoom !== newZoom) {
+              const scaleDiff = ( newZoom / initZoom ) - 1;
+              if (scaleDiff !== 0) {
+                const oPosition = this._scrolContainer.getDomRef().getBoundingClientRect();
+                this._scrolContainer.getDomRef().scrollLeft += (x + this._scrolContainer.getDomRef().scrollLeft ) * scaleDiff;
+                this._scrolContainer.getDomRef().scrollTop += (y - oPosition.top) * scaleDiff;
+              }
+            }
+          });
+        });
       }
     },
 
@@ -195,34 +206,42 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/m/MessageToast',
     },
 
     renderPage: function() {
-      if(this._device.getProperty("/system/phone") || this.getForceMobile()) {
-        if (this._viewerModel.getProperty("/pdfDoc") === null) return;
-        this._viewerModel.getProperty("/pdfDoc").getPage(this._viewerModel.getProperty("/currentPage")).then((page) => {
-          const canvas = document.querySelector("#id_ilim_pdf_canvas");
-          if(canvas){
-            const ctx = canvas.getContext("2d");
-            const viewport = page.getViewport({ scale: this._viewerModel.getProperty("/zoom"), 
-              rotation: this._viewerModel.getProperty("/rotation")
-            });
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            const renderCtx = {
-              canvasContext: ctx,
-              viewport: viewport,
-            };
-            if(this.currentRenderTask) {
-            	this.currentRenderTask.promise.then(()=>{
-            		this.currentRenderTask = page.render(renderCtx);
-            	}).catch(() => {
-            		console.log("Error by rendering pdf - try to rerender");
-            		this.currentRenderTask = page.render(renderCtx);
-            	})
-            } else {
-            	this.currentRenderTask = page.render(renderCtx);
-            }
+      return new Promise(function(resolve, reject) {
+        if(this._device.getProperty("/system/phone") || this.getForceMobile()) {
+          if (this._viewerModel.getProperty("/pdfDoc") === null) {
+            resolve();
+            return;
           }
-        });
-      }
+          this._viewerModel.getProperty("/pdfDoc").getPage(this._viewerModel.getProperty("/currentPage")).then((page) => {
+            const canvas = document.querySelector("#id_ilim_pdf_canvas");
+            if(canvas){
+              const ctx = canvas.getContext("2d");
+              const viewport = page.getViewport({ scale: this._viewerModel.getProperty("/zoom"), 
+                rotation: this._viewerModel.getProperty("/rotation")
+              });
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+              const renderCtx = {
+                canvasContext: ctx,
+                viewport: viewport,
+              };
+              if(this.currentRenderTask) {
+                this.currentRenderTask.promise.then(()=>{
+                  this.currentRenderTask = page.render(renderCtx);
+                }).catch(() => {
+                  console.log("Error by rendering pdf - try to rerender");
+                  this.currentRenderTask = page.render(renderCtx);
+                })
+              } else {
+                this.currentRenderTask = page.render(renderCtx);
+              }
+            }
+            resolve(this.currentRenderTask);
+          }).catch((error) => {
+            reject(error);
+          });
+        }
+      }.bind(this));
     },
     
     renderer: function(oRm, oControl) {
@@ -253,29 +272,29 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/m/MessageToast',
           if (e.touches.length === 2) {
             this.initialDistance = this.getDistance(e.touches[0], e.touches[1]);
             this.initialZoom = parseFloat(this._viewerModel.getProperty("/zoom"));
+            this.centerX = ( e.touches[0].clientX + e.touches[1].clientX ) / 2;
+            this.centerY = ( e.touches[0].clientY + e.touches[1].clientY ) / 2;
           }
         });
         canvas.addEventListener('touchmove', (e) => {
           if (e.touches.length === 2 && this.initialDistance !== null) {
             e.preventDefault(); // Prevent scrolling/zooming
-
             const newDistance = this.getDistance(e.touches[0], e.touches[1]);
-            let scale = newDistance / this.initialDistance;
-            scale = scale.toFixed(2);
-            console.log("scale: " + scale);
+            let scale = ( newDistance / this.initialDistance ).toFixed(2);
             let zoom = this.initialZoom * scale;
             zoom = this.initialZoom > 5 ? 5 : zoom;
-			console.log("new zoom: " + zoom);
             this.setNewZoom(zoom, true);
           }
         }, { passive: false });
-		canvas.addEventListener('touchend', (e) => {
-		  if (e.touches.length < 2) {
-		    this.initialDistance = null;
-		    this.initialZoom = 1;
-		    this.setNewZoom(parseFloat(this._viewerModel.getProperty("/zoom")));
-		  }
-		});
+        canvas.addEventListener('touchend', (e) => {
+          if (e.touches.length < 2 && this.initialDistance !== null) {
+            this.setNewZoom(parseFloat(this._viewerModel.getProperty("/zoom")), false, this.initialZoom, this.centerX, this.centerY);
+            this.initialDistance = null;
+            this.initialZoom = 1;
+            this.centerX = null;
+            this.centerY = null;
+          }
+        });
       }
      }
   });
